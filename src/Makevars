@@ -1,5 +1,5 @@
 SHLIB = hdf5.so
 OBJS = hdf5.o
 
-PKG_CPPFLAGS =  
-PKG_LIBS =   -lhdf5 -lz -lm
+PKG_CPPFLAGS =  -I/packages/include
+PKG_LIBS = -L/packages/lib -Wl,-rpath,/packages/lib  -lhdf5 -lz -lm

@@ -20,6 +20,7 @@
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <Rconfig.h>
+#include <R_ext/RS.h>
 
 #include <hdf5.h>
 
@@ -27,6 +28,7 @@
 #define REF2STRING_CONV "ref->string"
 /* FIXME: should really use SEXP R_RowNamesSymbol : */
 #define ROWNAMES "row.names"
+#define MAX_ROWNAMES_COUNT 100000
 
 #define warningcall Rf_warningcall
 void warningcall (SEXP call, char *format, ...);
@@ -35,7 +37,7 @@ void warningcall (SEXP call, char *format, ...);
 void errorcall (SEXP call, char *format, ...);
 
 /* global variables */
-int hdf5_global_verbosity = 0;
+int hdf5_global_verbosity = 3;
 int hdf5_global_nametidy = 0;
 int hdf5_global_attrcnt;
 
@@ -630,7 +632,7 @@ hdf5_write_vector (SEXP call, hid_t id, const char *symname, SEXP val)
 			      H5P_DEFAULT)) < 0)
       errorcall (call, "Unable to create dataset");
 
-    vector_io (call, LTRUE, dataset, space, val);
+    vector_io (call, TRUE, dataset, space, val);
     hdf5_save_attributes (call, dataset, val);
 
     if (type == LGLSXP || type == STRSXP)
@@ -849,12 +851,13 @@ hdf5_save_object (SEXP call, hid_t fid, const char *symname, SEXP val)
 	    errorcall (call, "Unable to write dataframe");
 	}
 	hdf5_save_attributes (call, dataset, val);
-	{
-	  SEXP rownames = getAttrib (val, R_RowNamesSymbol);
+        if (rowcount < MAX_ROWNAMES_COUNT || MAX_ROWNAMES_COUNT == 0)
+	  {
+	    SEXP rownames = getAttrib (val, R_RowNamesSymbol);
 
-	  if (rownames != R_NilValue)
-	    create_rownames_dataset_attribute (call, dataset, rownames);
-	}
+	    if (rownames != R_NilValue)
+	      create_rownames_dataset_attribute (call, dataset, rownames);
+          }
 	if (H5Dclose (dataset) < 0)
 	  errorcall (call, "Cannot close dataset");
 	if (H5Sclose (dataspace) < 0)
@@ -1112,7 +1115,7 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
       if ((space = H5Dget_space (dataset)) < 0)
 	errorcall (call, "unable to get dataset space");
 
-      if (H5Sis_simple (space) != LTRUE)
+      if (H5Sis_simple (space) != TRUE)
 	errorcall (call, "space not simple");
 
       if ((rank = H5Sget_simple_extent_ndims (space)) < 0)
@@ -1125,7 +1128,6 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
 	hsize_t dims[rank];
 	hsize_t maxdims[rank];
         unsigned i;
-        char buf[20];
 
 	if (H5Sget_simple_extent_dims (space, dims, maxdims) < 0)
 	  errorcall (call, "unable to get space extent");
@@ -1135,11 +1137,13 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
 
         for (i = 0; i < rowcount; i++)
           {
+            char buf[256];
+ 
             sprintf (buf, "%u", i);
             SET_STRING_ELT (rownames, i, mkChar (buf));
           }
+        setAttrib (vec, R_RowNamesSymbol, rownames);
       }      
-      setAttrib (vec, R_RowNamesSymbol, rownames);
       UNPROTECT (1);
 
       if (H5Sclose (space) < 0)
@@ -1166,12 +1170,13 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
   }
   PROTECT (rownames = allocVector (STRSXP, rowcount));
   {
-    SEXPREC *strptrs[rowcount];
+    size_t insize = H5Tget_size (rntid);
+    size_t outsize = sizeof (SEXPREC);
+    size_t size = (insize > outsize ? insize: outsize);
+
+    SEXPREC **strptrs = (SEXPREC **) R_chk_calloc (rowcount, size * 2);
     unsigned ri;
     hid_t rtid = make_sexp_ref_type (call);
-
-    for (ri = 0; ri < rowcount; ri++)
-      strptrs[ri] = STRING_ELT (rownames, ri);
 
     if (H5Aread (rnattrib, rtid, strptrs) < 0)
       errorcall (call, "can't read rownames");
@@ -1181,6 +1186,8 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
 
     if (H5Tclose (rtid) < 0)
       errorcall (call, "can't close close reference type");
+ 
+    R_chk_free (strptrs);
   }
   setAttrib (vec, R_RowNamesSymbol, rownames);
   UNPROTECT (1);
@@ -1210,7 +1217,17 @@ hdf5_process_attribute (hid_t loc_id, const char *attrName, void *data)
   H5T_class_t class;
   size_t tid_size;
   char newname[strlen(attrName) +1];
+
+  if (strcmp (attrName, ROWNAMES) == 0)
+    {
+      if (hdf5_global_verbosity > 1)
+        Rprintf ("Skipping attribute %s\n", attrName);
+        
+        return 0;
+    }
+
   hdf5_global_attrcnt++;
+
   if (hdf5_global_verbosity > 1)
     Rprintf ("Processing attribute %d called %s\n",
 	     hdf5_global_attrcnt,attrName);
@@ -1316,13 +1333,31 @@ hdf5_process_attribute (hid_t loc_id, const char *attrName, void *data)
 	      buf = REAL (vec);
 	      break;
 	    case H5T_STRING:
-	      buf = STRING_PTR (vec);
+              {
+                SEXPREC **ptr;
+		size_t insize = H5Tget_size (tid);
+		size_t outsize = sizeof (SEXPREC);
+		size_t size = insize > outsize ? insize : outsize;
+ 
+	        ptr = (SEXPREC **) R_chk_calloc (count, size * 2);
+
+                buf = ptr;
+              }
 	      break;
 	    default:
 	      abort ();
 	    }
 	  if (H5Aread (aid, memtid, buf) < 0)
 	    errorcall (ainfo->call, "unable to read attribute `%s'", attrName);
+          if (class == H5T_STRING)
+            {
+              SEXPREC **ptr = buf;
+              unsigned i;
+
+              for (i = 0; i < count; i++)
+                SET_STRING_ELT (vec, i, ptr[i]);
+              R_chk_free (buf);
+            }
 	  if (hdf5_global_verbosity > 2) 
 	    Rprintf ("string length of new name =%d\n",strlen(attrName)+1);
 	  strcpy(newname,attrName);
@@ -1468,7 +1503,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
       if (hdf5_global_verbosity > 1)
         Rprintf ("Dataset has space id %d\n", space);
 
-      if (H5Sis_simple (space) != LTRUE)
+      if (H5Sis_simple (space) != TRUE)
 	errorcall (iinfo->call, "space not simple");
 
       if ((rank = H5Sget_simple_extent_ndims (space)) < 0)
@@ -1515,7 +1550,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
               SEXP vec;
               size_t size = H5Tget_size (tid);
               unsigned ri, rowcount = dims[0];
-              char buf[rowcount][size];
+              char *buf = (char *) R_chk_calloc (rowcount, size * 2);
               hid_t rtid = make_sexp_ref_type (iinfo->call);
               SEXP names;
 
@@ -1543,13 +1578,15 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                   size_t coffset = H5Tget_member_offset (tid, ci);
                   SEXPREC **rowptr = &VECTOR_ELT (vec, ci);
                   unsigned char itembuf[size]; /* for overrun */
+
+#define ASSIGN(val) PROTECT (*rowptr = val)
                   
 #define VECLOOP(vectype, vecref, dtid) \
   { \
     size_t dsize = H5Tget_size (dtid); \
     for (ri = 0; ri < rowcount; ri++) \
       { \
-	memcpy (itembuf, &buf[ri][coffset], csize); \
+	memcpy (itembuf, buf + ri * size + coffset, csize); \
 	if (H5Tconvert (ctid, dtid, 1, itembuf, NULL, H5P_DEFAULT) < 0) \
 	  errorcall (iinfo->call, "type conversion failed"); \
 	memcpy (&vecref (*rowptr)[ri], itembuf, dsize); \
@@ -1569,22 +1606,22 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                       {
                         if (csize == 1)
                           {
-                            *rowptr = allocVector (LGLSXP, rowcount);
+                            ASSIGN (allocVector (LGLSXP, rowcount));
                             VECLOOP (LGLSXP, LOGICAL, H5T_NATIVE_INT);
                           }
                         else 
                           {
-                            *rowptr = allocVector (INTSXP, rowcount);
+                            ASSIGN (allocVector (INTSXP, rowcount));
                             VECLOOP (INTSXP, INTEGER, H5T_NATIVE_INT);
                           }
                       }
                       break;
                     case H5T_FLOAT:
-                      *rowptr = allocVector (REALSXP, rowcount);
+                      ASSIGN (allocVector (REALSXP, rowcount));
                       VECLOOP (REALSXP, REAL, H5T_NATIVE_DOUBLE);
                       break;
                     case H5T_STRING:
-                      *rowptr = allocVector (STRSXP, rowcount);
+                      ASSIGN (allocVector (STRSXP, rowcount));
                       VECLOOP (STRSXP, STRING_PTR, rtid);
                       break;
                     default:
@@ -1594,7 +1631,18 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                   if (H5Tclose (ctid) < 0)
                     errorcall (iinfo->call, "could not close member type");
                 }
-              load_rownames_dataset_attribute (iinfo->call, dataset, vec);
+              UNPROTECT (colcount);
+
+              if (rowcount < MAX_ROWNAMES_COUNT || MAX_ROWNAMES_COUNT == 0)
+                load_rownames_dataset_attribute (iinfo->call, dataset, vec);
+              else 
+                {
+                  SEXP rownames;
+
+                  PROTECT (rownames = allocVector (STRSXP, 0));
+                  setAttrib (vec, R_RowNamesSymbol, rownames);
+                  UNPROTECT (1);
+                }
               setAttrib (vec, R_NamesSymbol, names);
               UNPROTECT (1);
               setAttrib (vec, R_ClassSymbol, mkString ("data.frame"));
@@ -1604,7 +1652,10 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
 
               if (H5Tclose (rtid) < 0)
                 errorcall (iinfo->call, "could not close reference type");
+
+	      R_chk_free (buf);
             }
+
           else
             {
               SEXP obj;
@@ -1655,7 +1706,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                 }
 	      if (hdf5_global_verbosity > 2)
 		Rprintf ("calling vector_io. Hangs here with big datsets\n");  
-              vector_io (iinfo->call, LFALSE, dataset, space, obj);
+              vector_io (iinfo->call, FALSE, dataset, space, obj);
 	      if (hdf5_global_verbosity > 2)
 		Rprintf ("Phew. Done it. calling iinfo->add\n");  
 	      iinfo->add (iinfo, name, obj);
