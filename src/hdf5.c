@@ -82,7 +82,7 @@ ref_string (hid_t sid, hid_t did, H5T_cdata_t *cdata,
 
       for (i = 0; i < count; i++)
 	{
-	  strncpy (destbuf, CHAR (*recptr), maxlen);
+	  strncpy (destbuf, (char *) *recptr, maxlen);
 	  recptr++;
 	  destbuf += maxlen;
 	}
@@ -115,13 +115,18 @@ string_ref (hid_t sid, hid_t did, H5T_cdata_t *cdata,
       /* now copy the strings into an R string array, one at a time */
       for (i = 0; i < count;i ++)
         {
+	  void *ptr;
 	  /* The next 2 lines are necessary to ensure that each
 	     element of the array is null-terminated.  HDF5 files can
 	     contain arrays of Fortran strings which are space-padded,
 	     not null-terminated */
 	  strncpy (cstring, srcptr, size);
 	  cstring[size]='\0';
-	  ((SEXPREC **)buf)[i] = mkChar (cstring);
+	  ptr = malloc (strlen (cstring) + 1);
+	  if (!ptr)
+	    abort ();
+	  strcpy (ptr, cstring);
+	  ((const char **) buf)[i] = ptr;
 	  srcptr += size;
 	}
     }
@@ -179,55 +184,53 @@ permute (struct permute_info *pinfo, unsigned dimnum)
       switch (pinfo->type)
 	{
 	case STRSXP: 
-	case VECSXP:
 	  {
-	    char **pointaddr, **tmpaddr;
+	    char **tmpaddr;
  
-	    pointaddr = &((char **) pinfo->buf)[offset];
 	    tmpaddr = &((char **) pinfo->tmpbuf)[pinfo->tmpcnt];
 	    if (pinfo->writeflag)
-	      *tmpaddr = *pointaddr;
+	      *tmpaddr = CHAR (STRING_ELT (pinfo->buf, offset));
 	    else
-	      *pointaddr = *tmpaddr;
+	      SET_STRING_ELT (pinfo->buf, offset, mkChar (*tmpaddr));
 	  }
 	  
 	  break;
+	case VECSXP:
+	  abort ();
+	  break;
+	  
 	case REALSXP:
 	  {
-	    double *pointaddr, *tmpaddr;
+	    double *tmpaddr;
 	    
-	    pointaddr = &((double *) pinfo->buf)[offset];
 	    tmpaddr = &((double *) pinfo->tmpbuf)[pinfo->tmpcnt];
 	    if (pinfo->writeflag)
-	      *tmpaddr = *pointaddr;
+	      *tmpaddr = REAL (pinfo->buf)[offset];
 	    else
-	      *pointaddr = *tmpaddr;
+	      REAL (pinfo->buf)[offset] = *tmpaddr;
 	  }
 	  break;
 	case INTSXP:
 	  { 
-	    int *pointaddr, *tmpaddr;
+	    int *tmpaddr;
 
-	    pointaddr = &((int *) pinfo->buf)[offset];
 	    tmpaddr = &((int * ) pinfo->tmpbuf)[pinfo->tmpcnt];
 	    if (pinfo->writeflag)
-	      *tmpaddr = *pointaddr;
+	      *tmpaddr = INTEGER (pinfo->buf)[offset];
 	    else
-	      *pointaddr = *tmpaddr;
+	      INTEGER (pinfo->buf) [offset] = *tmpaddr;
 	  }
 	  break;
 	case LGLSXP:
 	  {
-	    int *pointaddr;
             unsigned char *tmpaddr;
 
-            pointaddr = &((int *) pinfo->buf)[offset];
             tmpaddr = &((unsigned char *) pinfo->tmpbuf)[pinfo->tmpcnt];
 
 	    if (pinfo->writeflag)
-                *tmpaddr = *pointaddr;
+	      *tmpaddr = LOGICAL (pinfo->buf)[offset];
             else
-              *pointaddr = *tmpaddr;
+              LOGICAL (pinfo->buf) [offset] = *tmpaddr;
 	  }
 	  break;
 	default:
@@ -356,7 +359,6 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
   long bufsize;
   SEXPTYPE type = TYPEOF (obj);
   hid_t memtid, tid, plist;
-  void *buf;
   void *tmpbuf;
   long n_elements,i;
   if (hdf5_global_verbosity > 3)
@@ -381,10 +383,8 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
   switch (type) {
   case STRSXP:
     { 
-      char *charp;
       memtid = make_sexp_ref_type (call);
-      buf = STRING_PTR (obj);
-      tmpbuf = R_alloc (n_elements, sizeof( charp));
+      tmpbuf = R_alloc (n_elements, sizeof (char *));
       /*bufsize=n_elements*sizeof(charp)*10;*/
       bufsize = -1;
       /* I can't work out what bufsize should be for strings. Because they
@@ -394,25 +394,23 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
     break;
   case REALSXP:
     memtid = H5T_NATIVE_DOUBLE;
-    buf = REAL (obj);
     tmpbuf = R_alloc (n_elements, sizeof(double));
     bufsize = n_elements * sizeof(double);
     break;
   case INTSXP:
     memtid = H5T_NATIVE_INT;
-    buf = INTEGER (obj);
     tmpbuf = R_alloc (n_elements, sizeof (int));
     bufsize = n_elements * sizeof (int);
     break;
   case LGLSXP:
     memtid = make_boolean_type (call);
-    buf = LOGICAL (obj);
     tmpbuf = R_alloc (n_elements, sizeof (unsigned char));
     bufsize = n_elements * sizeof (unsigned char);
     break;
   default:
     errorcall (call, "Can't get type for R type: %d (IO)", type);
-    /* unreached (-Wall): */ memtid = tid;  buf = &tid;
+    /* unreached (-Wall): */
+    break;
   }
 
   /* set type conversion buffer size in property list . In most circs, 
@@ -464,8 +462,8 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
     pinfo.dataset = dataset;
     pinfo.memtid = memtid;
     pinfo.space = space;
-    pinfo.buf = buf;
-    pinfo.tmpbuf=tmpbuf;
+    pinfo.buf = obj;
+    pinfo.tmpbuf = tmpbuf;
     pinfo.tmpcnt=0;
 
     /* The grinding slowness happened inside this call to permute()
@@ -1441,7 +1439,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
       if (gid < 0)
 	errorcall (iinfo->call, "unable to open group `%s'", name);
 
-      PROTECT (l = collect (iinfo->call, gid, hdf5_process_object, iinfo->env));
+      PROTECT (l = PairToVectorList (collect (iinfo->call, gid, hdf5_process_object, iinfo->env)));
       if (hdf5_global_verbosity > 2)
         Rprintf ("Adding `%s'\n", name);
       iinfo->add (iinfo, name, l);

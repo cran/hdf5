@@ -81,7 +81,7 @@ hdf5save("ex1.hdf", "m","PP","ll","l2")
 rm(m,PP,ll,l2)  # and reload them:
 hdf5load("ex1.hdf")
 m        # read from "ex1.hdf"; buglet: dimnames dropped
-str(ll)  # buglet: "pairlist" instead of "list"
+str(ll)
 str(l2)
 }
 \keyword{file}
