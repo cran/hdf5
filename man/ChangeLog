@@ -1,3 +1,18 @@
+2001-07-12  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.Rd: Add warning about tidy. Make separate entries for
+	arguments file and fileout as R 1.3.0 noticed the inconsistency.
+
+2001-04-26  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.Rd: Add tidy argument to hdf5load. Change description of
+	load argument.
+
+2001-02-03  Marcus G. Daniels  <mgd@drone.swarm.org>
+
+	* hdf5.Rd: Add verbosity argument to hdf5load.
+	Add Hugh to author list.  Note that arrays work.
+
 2000-02-02    <mgd@nest.swarm.org>
 
 	* hdf5.Rd: Update examples to current API.

@@ -1,3 +1,99 @@
+2001-07-12  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.c (hdf5_process_attribute): fixed bug in diagnostic
+	that caused occasional segfaults.
+
+2001-06-25  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* hdf5.c: Initialize nametidy and verbosity.
+	(permute): Handle logicals in a portable way.
+	(Bug existed prior to Hugh's last few changes.)
+
+2001-05-18  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.c (string_ref): Fixed so it works with Fortran space-padded
+	strings, even if there is an array of more than one string.
+
+2001-05-15  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.c (vector_io)(permute): Re-written to read HDF5 datasets
+	with a single call. Increases speed a great deal for large
+	datasets. (add_to_symbol_table) Fixed bug so it _really_ uses
+	nametidy.
+	
+2001-05-01  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.c (hdf5_process_attribute): fixed bug I introduced 
+	for rank 1 attributes.
+
+2001-04-26  Hugh Pumphrey  <hcp@met.ed.ac.uk>
+
+	* hdf5.c (hdf5_process_attribute): Now works for attributes of
+	rank 0. (nametidy) Added to convert HDF5 names to R variable names
+	(add_to_list)(add_to_symbol_table) Now use nametidy.  
+
+2001-04-12  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* hdf5.c (make_boolean_type): New function.
+	(load_scalar, vector_io, hdf5_save_attributes, hdf5_write_vector,
+	(hdf5_save_object, hdf5_process_attribute): Use it.
+	Use LOGICAL in these places instead of INTEGER.  Handle drop
+	of boolean type and use LGLSXP in VECLOOP as appropriate.
+
+2001-04-10  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* hdf5.c (load_rownames_dataset_attribute): Close the
+	space, type, and attribute as appropriate.  Close rtid.
+	(hdf5_process_object): Free the member name.
+	(hdf5_process_object): Close ctid and rtid.
+
+2001-04-09    <mgd@coyote.santafe.edu>
+
+	* hdf5.c (add_to_list): Set CDR of iinfo->ret to append.
+	(collect): Setup pair for appending into.  Don't copy when finished.
+	(add_to_return_list): Remove.
+	(do_hdf5load): Setup pair for appending into and use add_to_list,
+	not add_to_return_list.
+
+2001-04-05    <mgd@coyote.santafe.edu>
+
+	* hdf5.c (hdf5_save_object): Create an empty group on null values.
+
+2001-03-31  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* hdf5.c (string_ref, ref_string): Handle HDF5 1.2.2 and >= HDF5 1.4.0.
+
+2001-03-11  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* hdf5.c (string_ref, ref_string): Use hsize_t for count.  (HDF5 1.4)
+	(do_hdf5cleanup): Bug fix.  Both thanks to Hugh Pumphrey.
+	(load_scalar): Add.
+	(hdf5_process_object): Use it.
+
+2001-02-03  Marcus G. Daniels  <mgd@drone.swarm.org>
+
+	* hdf5.c (errorcall): Add macro and declaration.
+	(hdf5_global_verbosity): New global.
+	(hdf5_process_attribute, hdf5_process_object, do_hdf5load): Use it. Add
+	many messages.
+	(hdf5_process_object): Support n-dimensional arrays.
+	(do_hdf5load): Set hdf5_global_verbosity.
+
+2000-08-19  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* hdf5.c: Use SET_STRING_ELT, STRING_ELT, VECTOR_ELT, and STRING_PTR
+	as appropriate (for R 1.2).
+
+2000-07-20  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* hdf5.c (ref_string, string_ref): Add bkg_stride argument per
+	HDF5 1.2.2.
+
+2000-07-16  Marcus G. Daniels  <mgd@nest.swarm.org>
+
+	* hdf5.c (load_rownames_dataset_attribute): Create row names
+	on the fly if absent.
+
 2000-01-28    <mgd@nest.swarm.org>
 
 	* hdf5.c: Declare warningcall. 

@@ -1,9 +1,9 @@
-"hdf5load" <-  function (file, load = TRUE)
+"hdf5load" <-  function (file, load = TRUE, verbosity = 0, tidy = FALSE)
 {
   call <- sys.call()
-  .External("do_hdf5load", call, sys.frame(sys.parent()), file, load)
-}
-
+  .External("do_hdf5load", call, sys.frame(sys.parent()), file, load,
+            as.integer (verbosity), as.logical(tidy))
+}   
 
 "hdf5save" <- function (fileout, ...)
 {

@@ -1,0 +1,4 @@
+2001-06-25  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* hdf5.R: Add tidy argument.
+

@@ -1,3 +1,52 @@
+2001-08-06  Marcus G. Daniels  <mgd@condor.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-06-25  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-04-12  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-04-10  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-04-09  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-04-04  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+ 
+2001-03-31  Marcus G. Daniels  <mgd@maya.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-03-11  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* DESCRIPTION (Version): Bump.
+
+2001-02-03  Marcus G. Daniels  <mgd@drone.swarm.org>
+
+	* DESCRIPTION (Maintainer): Add.
+	(Version): Bump.
+
+2000-08-19  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* DESCRIPTION (Package): Bump.
+
+2000-07-20  Marcus G. Daniels  <mgd@forager.swarm.org>
+
+	* DESCRIPTION (Package): Bump.
+
+2000-07-16  Marcus G. Daniels  <mgd@nest.swarm.org>
+
+	* DESCRIPTION (Package): Bump.
+
 2000-01-27    <mgd@nest.swarm.org>
 
 	* configure.in: Add HDF5_PERS_SOFT check.
