@@ -1,3 +1,10 @@
+2002-03-01 Philippe Grosjean <phgrosjean@sciviews.org> 
+
+        * addition of alias and synopsis to include hdf5cleanup and
+        avoid warning of undocumented function in compilation
+        
+        * some cosmetic changes in the doc
+
 2001-07-12  Hugh Pumphrey  <hcp@met.ed.ac.uk>
 
 	* hdf5.Rd: Add warning about tidy. Make separate entries for

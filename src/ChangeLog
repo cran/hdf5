@@ -1,3 +1,20 @@
+2003-09-17 Marcus G. Daniels <mgd@santafe.edu>
+
+	* hdf5.c: include Rmath.h instead of R_ext/Mathlib.h.
+
+2002-03-01 Philippe Grosjean <phgrosjean@sciviews.org>
+
+	* added libhdf5.def and a modified version of Makevars.win
+	to allow compilation of the dll in Windows (thanks to Prof.
+ 	Brian D. Ripley for providing these files!
+ 	Read Win_ReadMe.txt for instructions on how to add required
+ 	files from the hdf5 libraries to compile succesfully on
+ 	Windows.
+
+2001-12-14  Marcus G. Daniels  <mgd@condor.santafe.edu>
+
+	* hdf5.c (make_sexp_ref_type): Disable assignment of size.
+
 2001-07-12  Hugh Pumphrey  <hcp@met.ed.ac.uk>
 
 	* hdf5.c (hdf5_process_attribute): fixed bug in diagnostic

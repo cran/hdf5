@@ -2,7 +2,7 @@ AC_INIT(DESCRIPTION)
 AC_PROG_CC
 
 AC_ARG_WITH(zlib,
-[  --with-zlib=DIR        Use zlib installed in DIR])
+[  --with-zlib=DIR        Use zlib installed in DIR]) 
 
 if test -n "$with_zlib"; then
   ZLIBLDFLAGS=-L${with_zlib}/lib
@@ -10,7 +10,7 @@ if test -n "$with_zlib"; then
 fi
 
 AC_ARG_WITH(hdf5,
-[  --with-hdf5=DIR        Use HDF5 installed in DIR])
+[  --with-hdf5=DIR        Use HDF5 installed in DIR]) 
 
 if test -n "$with_hdf5"; then
   HDF5LDFLAGS=-L${with_hdf5}/lib

@@ -1,3 +1,18 @@
+2002-03-01  Marcus G. Daniels  <mgd@condor.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
+2002-03-01 Philippe Grosjean <phgrosjean@sciviews.org>
+
+ 	* win_readme.txt added to explain how to compile
+ 	and install the libraries in Windows
+ 	
+ 	* Other changes in man and src
+ 	
+2001-12-14  Marcus G. Daniels  <mgd@condor.santafe.edu>
+
+	* DESCRIPTION (Version): Bump.
+
 2001-08-06  Marcus G. Daniels  <mgd@condor.santafe.edu>
 
 	* DESCRIPTION (Version): Bump.

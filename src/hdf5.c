@@ -1,6 +1,6 @@
 /*
  *  R : A Computer Language for Statistical Data Analysis
- *  Copyright (C) 1998-2001  Marcus G. Daniels <mgd@swarm.org>
+ *  Copyright (C) 1998-2003  Marcus G. Daniels <mgd@swarm.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 #define USE_RINTERNALS
 #include <Rinternals.h>
-#include <R_ext/Mathlib.h>
+#include <Rmath.h>
 #include <Rconfig.h>
 
 #include <hdf5.h>
@@ -245,8 +245,10 @@ make_sexp_ref_type (SEXP call)
 
   if ((memtid = H5Tcopy (H5T_STD_REF_OBJ)) < 0)
     errorcall (call, "Unable to copy H5T_STD_REF_OBJ");
+#if 0
   if (H5Tset_size (memtid, sizeof (SEXPREC *)) < 0)
     errorcall (call, "unable to set size of reference type");
+#endif
   return memtid;
 }
 

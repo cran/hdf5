@@ -1,0 +1,2 @@
+PKG_CPPFLAGS = -I./include -D_HDF5USEDLL_
+PKG_LIBS = -L. -lhdf5dll
