@@ -1,0 +1,4 @@
+2000-01-27    <mgd@nest.swarm.org>
+
+	* configure.in: Add HDF5_PERS_SOFT check.
+

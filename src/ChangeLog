@@ -1,0 +1,6 @@
+2000-01-28    <mgd@nest.swarm.org>
+
+	* hdf5.c: Declare warningcall. 
+	(do_hdf5cleanup): Return R_NilValue.
+	
+
