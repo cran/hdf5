@@ -41,10 +41,10 @@ int hdf5_global_verbosity = 3;
 int hdf5_global_nametidy = 0;
 int hdf5_global_attrcnt;
 
-#if ((H5_VERS_MAJOR > 1) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR >= 4))
-#define count_size_t hsize_t
-#else
+#if ((H5_VERS_MAJOR > 1) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR > 6) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 6 && H5_VERS_RELEASE >= 3))
 #define count_size_t size_t
+#else
+#define count_size_t hsize_t
 #endif
 
 void
@@ -372,7 +372,6 @@ static void
 vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
 {
   int rank = H5Sget_simple_extent_ndims (space);
-  hsize_t mdims[1] = {1};
   hsize_t dims[rank], maxdims[rank];
   /* WARNING: Don't make bufsize a hsize_t. If you do this,
      then bufsize=-1 ; if(bufsize>0) is (ludicrously) regarded as
@@ -380,11 +379,11 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
      when we pass it to a HDF5 routine. There are known weirdnesses
      regarding hsize_t and gcc which may be a compiler bug and this is
      probably another example.  */
-  long bufsize;
+  long bufsize = 0;
   SEXPTYPE type = TYPEOF (obj);
   hid_t memtid, tid, plist;
   void *buf;
-  void *tmpbuf;
+  void *tmpbuf = NULL;
   long n_elements,i;
   if (hdf5_global_verbosity > 3)
     Rprintf ("in vector_io: rank=%d\n",rank); 
@@ -419,12 +418,13 @@ vector_io (SEXP call, int writeflag, hid_t dataset, hid_t space, SEXP obj)
 	    size = sizeof (char *);
 	  bufsize = n_elements * size;
 
-	  // this accomplishes two things:
-	  // 1) it avoids buffer-too-small errors from HDF5 for small strings
-	  // 
-	  // 2) it ensures that the string set is read in one pass, and
-	  //    the string vector fully populated (as opposed to several reads
-	  //    that fill only half of it.
+          /* this accomplishes two things:
+	     1) it avoids buffer-too-small errors from HDF5 for small strings
+	   
+	     2) it ensures that the string set is read in one pass, and
+	        the string vector fully populated (as opposed to several reads
+	        that fill only half of it.
+          */
 	  bufsize *= 2;
 
 	  tmpbuf = Calloc (bufsize, char);

@@ -1,14 +1,24 @@
+2005-05-06  Marcus G. Daniels  <mgd@santafe.edu>
+
+	* configure.win: New files.  Copies HDF5 and dependent DLLs to
+	library/hdf5/libs.
+
+2005-05-05  Marcus G. Daniels  <mgd@santafe.edu>
+
+	* NAMESPACE: Dropped useDynLib.  Will now explicitly dynload modules.
+	DESCRIPTION: Bump version.
+
 2002-03-01  Marcus G. Daniels  <mgd@condor.santafe.edu>
 
 	* DESCRIPTION (Version): Bump.
 
 2002-03-01 Philippe Grosjean <phgrosjean@sciviews.org>
 
- 	* win_readme.txt added to explain how to compile
- 	and install the libraries in Windows
- 	
- 	* Other changes in man and src
- 	
+	* win_readme.txt added to explain how to compile
+	and install the libraries in Windows
+	
+	* Other changes in man and src
+	
 2001-12-14  Marcus G. Daniels  <mgd@condor.santafe.edu>
 
 	* DESCRIPTION (Version): Bump.
