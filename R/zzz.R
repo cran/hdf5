@@ -1,4 +1,6 @@
-.First.lib <- function(lib, pkg)
+.noGenerics <- TRUE
+
+.onUnload <- function (libpath)
 {
-	library.dynam("hdf5", pkg, lib)
+   library.dynam.unload("hdf5", libpath)
 }

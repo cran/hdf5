@@ -1,0 +1,3 @@
+useDynLib(hdf5)
+
+export(hdf5load,hdf5save,hdf5cleanup)

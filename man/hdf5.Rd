@@ -67,7 +67,7 @@ hdf5load(file, load = TRUE, verbosity = 0, tidy = FALSE)
   library, version 1.2 or higher (freely available from the reference below).
 }
 \author{Marcus G. Daniels \email{mgd@swarm.org},
-        Hugh C. Pumphrey \email{hcp@met.ed.ac.uk},
+        Hugh C. Pumphrey \email{H.C.Pumphrey@ed.ac.uk},
         Philippe Grosjean \email{phgrosjean@sciviews.org}}
 \references{\url{http://hdf.ncsa.uiuc.edu}}
 \seealso{
@@ -79,7 +79,7 @@ ll <- list(a=1:10, b=letters[1:8]);
 l2 <- list(C="c", l=ll); PP <- pi
 hdf5save("ex1.hdf", "m","PP","ll","l2")
 rm(m,PP,ll,l2)  # and reload them:
-hdf5load("ex1.hdf")
+hdf5load("ex1.hdf",verbosity=3)
 m        # read from "ex1.hdf"; buglet: dimnames dropped
 str(ll)
 str(l2)
