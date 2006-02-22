@@ -123,7 +123,7 @@ string_ref (hid_t sid, hid_t did, H5T_cdata_t *cdata,
 	     not null-terminated */
 	  strncpy (cstring, srcptr, size);
 	  cstring[size]='\0';
-	  *ptr = calloc (strlen (cstring) + 1, sizeof (char));
+	  *ptr = Calloc (strlen (cstring) + 1, char);
 	  if (!*ptr)
 	    abort ();
 	  strcpy (*ptr, cstring);
@@ -182,7 +182,6 @@ permute (struct permute_info *pinfo, unsigned dimnum)
 	  mult *= pinfo->dims[i - 1];
 	  offset += pinfo->coord[i] * mult;
 	}
-
       switch (pinfo->type)
 	{
 	case STRSXP: 
@@ -198,7 +197,8 @@ permute (struct permute_info *pinfo, unsigned dimnum)
 	      {
 		char *ptr =
 		  ((char **) pinfo->tmpbuf)[pinfo->tmpcnt];
-		
+	
+		Rprintf ("[%s]\n", ptr);
 		SET_STRING_ELT (pinfo->buf, offset, mkChar (ptr));
 	      }
 	  }
@@ -1658,6 +1658,18 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
       } \
   }
 
+#define STRVECLOOP(vectype, dtid) \
+  { \
+    size_t dsize = H5Tget_size (dtid); \
+    for (ri = 0; ri < rowcount; ri++) \
+      { \
+	memcpy (itembuf, buf + ri * size + coffset, csize); \
+	if (H5Tconvert (ctid, dtid, 1, itembuf, NULL, H5P_DEFAULT) < 0) \
+	  errorcall (iinfo->call, "type conversion failed"); \
+	SET_STRING_ELT (VECTOR_ELT (vec,ci), ri, mkChar (*(const char **) itembuf)); \
+      } \
+  }
+
                   {
                     char *colname = H5Tget_member_name (tid, ci);
                     
@@ -1687,7 +1699,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                       break;
                     case H5T_STRING:
                       ASSIGN (allocVector (STRSXP, rowcount));
-                      VECLOOP (STRSXP, STRING_PTR, rtid);
+                      STRVECLOOP (STRSXP, rtid);
                       break;
                     default:
                       errorcall (iinfo->call, "can't handle hdf class %d",

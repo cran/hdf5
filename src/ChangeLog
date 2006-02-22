@@ -1,3 +1,7 @@
+2006-08-07 Marcus G. Daniels <mdaniels@lanl.gov>
+	
+	* hdf5.c (STRVECLOOP): New macro.
+
 2006-05-31 Marcus G. Daniels <mgd@santafe.edu>
 
 	* hdf5.c (VECLOOP, ASSIGN): Bug fixes for vector assignments.
