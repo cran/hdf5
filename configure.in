@@ -13,7 +13,10 @@ AC_ARG_WITH(hdf5,
 [  --with-hdf5=DIR        Use HDF5 installed in DIR]) 
 
 if test -n "$with_hdf5"; then
-  HDF5LDFLAGS="-L${with_hdf5}/lib -Wl,-rpath,${with_hdf5}/lib"
+  HDF5LDFLAGS="-L${with_hdf5}/lib"
+  if test `uname -s` != "Darwin"; then
+    HDF5LDFLAGS="-Wl,-rpath,${with_hdf5}/lib"
+  fi
   HDF5CPPFLAGS=-I${with_hdf5}/include
 fi
 

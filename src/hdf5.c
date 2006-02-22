@@ -17,6 +17,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #define USE_RINTERNALS
+#include <Rversion.h>
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <Rconfig.h>
@@ -30,11 +31,12 @@
 #define ROWNAMES "row.names"
 #define MAX_ROWNAMES_COUNT 100000
 
+#if R_VERSION < R_Version(2, 3, 0)
 #define warningcall Rf_warningcall
-void warningcall (SEXP call, char *format, ...);
-
+void warningcall (SEXP call, const char *format, ...);
 #define errorcall Rf_errorcall
-void errorcall (SEXP call, char *format, ...);
+void errorcall (SEXP call, const char *format, ...);
+#endif
 
 /* global variables */
 int hdf5_global_verbosity = 3;
