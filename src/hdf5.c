@@ -1642,10 +1642,9 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                   H5T_class_t class = H5Tget_class (ctid);
                   size_t csize = H5Tget_size (ctid);
                   size_t coffset = H5Tget_member_offset (tid, ci);
-                  SEXPREC **rowptr = &VECTOR_ELT (vec, ci);
                   unsigned char itembuf[size]; /* for overrun */
 
-#define ASSIGN(val) PROTECT (*rowptr = val)
+#define ASSIGN(val) SET_VECTOR_ELT (vec,ci,PROTECT(val))
                   
 #define VECLOOP(vectype, vecref, dtid) \
   { \
@@ -1655,7 +1654,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
 	memcpy (itembuf, buf + ri * size + coffset, csize); \
 	if (H5Tconvert (ctid, dtid, 1, itembuf, NULL, H5P_DEFAULT) < 0) \
 	  errorcall (iinfo->call, "type conversion failed"); \
-	memcpy (&vecref (*rowptr)[ri], itembuf, dsize); \
+	memcpy (&vecref (VECTOR_ELT (vec,ci))[ri], itembuf, dsize); \
       } \
   }
 
