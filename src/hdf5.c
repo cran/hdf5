@@ -23,7 +23,11 @@
 #include <Rconfig.h>
 #include <R_ext/RS.h>
 
+#define H5_USE_16_API
 #include <hdf5.h>
+
+#include <ctype.h> // isalpha
+#include <stdlib.h> // abort
 
 #define STRING2REF_CONV "string->ref"
 #define REF2STRING_CONV "ref->string"

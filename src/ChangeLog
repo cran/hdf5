@@ -1,3 +1,8 @@
+2008-06-15  Marcus G. Daniels  <marcus@snoutfarm.com>
+
+	* hdf5.c: Define H5_USE_16_API.  Include ctype.h and stdlib.h.
+	Thanks to George N. White III.
+
 2007-04-14  Marcus G. Daniels  <mgd@maxine.snoutfarm.com>
 
 	* hdf5.c: Always use hsize_t for count_size_t.
