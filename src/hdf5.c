@@ -43,7 +43,7 @@ int hdf5_global_verbosity = 3;
 int hdf5_global_nametidy = 0;
 int hdf5_global_attrcnt;
 
-#if ((H5_VERS_MAJOR > 1) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR > 6) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 6 && H5_VERS_RELEASE >= 3))
+#if ((H5_VERS_MAJOR > 1) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR > 6) || (H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 6 && H5_VERS_RELEASE >= 3)) && 1
 #define count_size_t size_t
 #else
 #define count_size_t hsize_t
@@ -100,8 +100,8 @@ string_ref (hid_t sid, hid_t did, H5T_cdata_t *cdata,
   if (cdata->command == H5T_CONV_CONV)
     {
       size_t size = H5Tget_size (sid);
-      unsigned char srcbuf[size * count], *srcptr = srcbuf;
-      unsigned char cstring[size+1];
+      char srcbuf[size * count], *srcptr = srcbuf;
+      char cstring[size+1];
       size_t i;
 
       /* `count' is the number of strings in the array. size is the
@@ -140,7 +140,7 @@ struct permute_info {
   int writeflag;
   SEXPTYPE type;
   unsigned rank;
-  hssize_t *dims;
+  hsize_t *dims;
   hssize_t *coord;
   hid_t dataset;
   hid_t memtid;
@@ -276,13 +276,15 @@ get_string_type (SEXP call, SEXP vec)
   hid_t stid;
   unsigned vecpos;
   size_t maxstrlen = 0;
+  int vlen = LENGTH (vec);
 
-  for (vecpos = 0; vecpos < LENGTH (vec); vecpos++)
+  for (vecpos = 0; vecpos < vlen; vecpos++)
     {
-      SEXP stritem = STRING_ELT (vec, vecpos);
+      const char *str = CHAR (STRING_ELT (vec, vecpos));
+      size_t len = strlen (str);
 
-      if (LENGTH (stritem) > maxstrlen)
-	maxstrlen = LENGTH (stritem);
+      if (len > maxstrlen)
+	maxstrlen = len;
     }
 
   if ((stid = H5Tcopy (H5T_C_S1)) < 0)
@@ -754,10 +756,10 @@ align (unsigned offset, unsigned alignto)
 static void
 create_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP rownames)
 {
+  unsigned rowcount = LENGTH (rownames);
   hid_t stringtid = get_string_type (call, rownames);
   hid_t rtid = make_sexp_ref_type (call);
   hid_t rnattrib, rndataspace;
-  unsigned rowcount = LENGTH (rownames);
   hsize_t dims[1];
   const char **buf = Calloc (rowcount, const char *);
   unsigned i;
@@ -920,7 +922,7 @@ hdf5_save_object (SEXP call, hid_t fid, const char *symname, SEXP val)
 	  {
 	    SEXP rownames = getAttrib (val, R_RowNamesSymbol);
 
-	    if (rownames != R_NilValue)
+	    if (rownames != R_NilValue && isString (rownames))
 	      create_rownames_dataset_attribute (call, dataset, rownames);
           }
 	if (H5Dclose (dataset) < 0)
@@ -1192,31 +1194,28 @@ load_rownames_dataset_attribute (SEXP call, hid_t dataset, SEXP vec)
       {
 	hsize_t dims[rank];
 	hsize_t maxdims[rank];
-        unsigned i;
 
 	if (H5Sget_simple_extent_dims (space, dims, maxdims) < 0)
 	  errorcall (call, "unable to get space extent");
 
         rowcount = dims[0];
-        PROTECT (rownames = allocVector (STRSXP, rowcount));
-
-        for (i = 0; i < rowcount; i++)
-          {
-            char buf[256];
- 
-            sprintf (buf, "%u", i);
-            SET_STRING_ELT (rownames, i, mkChar (buf));
-          }
-        setAttrib (vec, R_RowNamesSymbol, rownames);
       }      
-      UNPROTECT (1);
+
+      { 
+        SEXP rownames;
+
+        PROTECT (rownames = allocVector (INTSXP, 2));
+        INTEGER(rownames)[0] = NA_INTEGER;
+        INTEGER(rownames)[1] = rowcount;
+        setAttrib (vec, R_RowNamesSymbol, rownames);
+        UNPROTECT (1);
+      }
 
       if (H5Sclose (space) < 0)
 	errorcall (call, "unable to close dataset space");
 
       return;
     }
-
   if ((rnspace = H5Aget_space (rnattrib)) < 0)
     errorcall (call, "could not get space for rownames attribute");
 
@@ -1660,7 +1659,6 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
 
 #define STRVECLOOP(vectype, dtid) \
   { \
-    size_t dsize = H5Tget_size (dtid); \
     for (ri = 0; ri < rowcount; ri++) \
       { \
 	memcpy (itembuf, buf + ri * size + coffset, csize); \
@@ -1710,16 +1708,7 @@ hdf5_process_object (hid_t id, const char *name, void *client_data)
                 }
               UNPROTECT (colcount);
 
-              if (rowcount < MAX_ROWNAMES_COUNT || MAX_ROWNAMES_COUNT == 0)
-                load_rownames_dataset_attribute (iinfo->call, dataset, vec);
-              else 
-                {
-                  SEXP rownames;
-
-                  PROTECT (rownames = allocVector (STRSXP, 0));
-                  setAttrib (vec, R_RowNamesSymbol, rownames);
-                  UNPROTECT (1);
-                }
+              load_rownames_dataset_attribute (iinfo->call, dataset, vec);
               setAttrib (vec, R_NamesSymbol, names);
               UNPROTECT (1);
               setAttrib (vec, R_ClassSymbol, mkString ("data.frame"));

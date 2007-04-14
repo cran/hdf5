@@ -1,3 +1,18 @@
+2007-04-14  Marcus G. Daniels  <mgd@maxine.snoutfarm.com>
+
+	* hdf5.c: Always use hsize_t for count_size_t.
+	(string_ref): Use signed char for srcbuf, cstring.
+	(permute_info): Use hsize_t for dims.
+	(get_string_type): Use strlen to get length.  Rename outer len to
+	vlen.
+	(hdf5_save_object): Don't call create_rownames_dataset_attribute
+	unless rownames has strings in it.
+	(load_rownames_dataset_attribute): Don't create stringified
+	integer rownames if row names attribute not found in HDF5 file.
+	Set special NA_INTEGER with rowcount instead.
+	(hdf5_process_object): Always call load_rownames_dataset_attribute
+	without regard to row count.
+
 2006-08-07 Marcus G. Daniels <mdaniels@lanl.gov>
 	
 	* hdf5.c (STRVECLOOP): New macro.

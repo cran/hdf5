@@ -3,6 +3,8 @@ if test -z "$HDF5"; then
   HDF5=$HOME/hdf5-support
 fi
 mkdir $DPKG/libs
-cp $HDF5/hdf5dll.dll $DPKG/libs
-cp $HDF5/szlibdll.dll $DPKG/libs
-cp $HDF5/zlib1.dll $DPKG/libs
+#cp $HDF5/hdf5dll.dll $DPKG/libs
+#cp $HDF5/szlibdll.dll $DPKG/libs
+#cp $HDF5/zlib1.dll $DPKG/libs
+cp $HDF5/cyghdf5-0.dll $DPKG/libs
+cp $HDF5/mgwz.dll $DPKG/libs
