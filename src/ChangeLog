@@ -1,3 +1,11 @@
+2008-11-16  Marcus G. Daniels  <marcus@snoutfarm.com>
+
+	* hdf5.c (permute):  Remove diagnostic.
+	Thanks to Nathaniel Smith for the report.
+
+	* hdf5.c (permute): Use const char ** to avoid warning.
+	(do_hdf5save): Likewise.
+
 2008-06-15  Marcus G. Daniels  <marcus@snoutfarm.com>
 
 	* hdf5.c: Define H5_USE_16_API.  Include ctype.h and stdlib.h.

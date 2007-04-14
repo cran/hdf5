@@ -192,9 +192,9 @@ permute (struct permute_info *pinfo, unsigned dimnum)
 	  {
 	    if (pinfo->writeflag)
               {
-	        char **tmpaddr;
+	        const char **tmpaddr;
 
-	        tmpaddr = &((char **) pinfo->tmpbuf)[pinfo->tmpcnt];
+	        tmpaddr = &((const char **) pinfo->tmpbuf)[pinfo->tmpcnt];
 	        *tmpaddr = CHAR (STRING_ELT (pinfo->buf, offset));
               }
 	    else
@@ -202,7 +202,6 @@ permute (struct permute_info *pinfo, unsigned dimnum)
 		char *ptr =
 		  ((char **) pinfo->tmpbuf)[pinfo->tmpcnt];
 	
-		Rprintf ("[%s]\n", ptr);
 		SET_STRING_ELT (pinfo->buf, offset, mkChar (ptr));
 	      }
 	  }
@@ -1101,7 +1100,7 @@ do_hdf5save (SEXP args)
       if (TYPEOF (CAR (names)) != STRSXP)
         errorcall (call, "expecting a symbol name");
       {
-        char *name = CHAR (STRING_ELT (CAR (names), 0));
+        const char *name = CHAR (STRING_ELT (CAR (names), 0));
         
         PROTECT (sym = install (name));
         PROTECT (s = findVar (sym, env));
