@@ -1,3 +1,9 @@
+2009-01-11  Marcus G. Daniels <marcus@snoutfarm.com>
+	
+	* configure.win: Use R_PACKAGE_DIR instead of DPKG.
+	
+	* DESCRIPTION (Version): Bump.
+
 2008-11-16  Marcus G. Daniels <marcus@snoutfarm.com>
 
 	* DESCRIPTION (Version): Bump.

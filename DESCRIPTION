@@ -1,8 +1,10 @@
 Package: hdf5
-Version: 1.6.8
+Version: 1.6.9
 Title: HDF5
 Author: Marcus G. Daniels mdaniels@lanl.gov
 Maintainer: Marcus G. Daniels <mdaniels@lanl.gov>
 Description: Interface to the NCSA HDF5 library
-License: GPL Version 2 or later.
+License: GPL (>= 2)
 Packaged: Sat Apr 14 15:09:53 2007; hp
+Repository: CRAN
+Date/Publication: 2009-01-11 19:34:25
